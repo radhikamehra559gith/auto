@@ -19,7 +19,7 @@ from firebase_admin import credentials, storage, firestore
 # ========================================
 bot_id = "bot2"
 
-firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")
+firebase_credentials = os.getenv("FIREBASE_KEY")
 
 
 bucket_name = "chat-app-13880.appspot.com"
