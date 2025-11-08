@@ -2,7 +2,7 @@ name: Firebase Video Automation
 
 on:
   schedule:
-    - cron: "0 */4 * * *" # every 4 hours
+    - cron: "0 */9 * * *" # every 4 hours
   workflow_dispatch:
 
 jobs:
@@ -29,4 +29,4 @@ jobs:
           FIREBASE_BUCKET: ${{ secrets.FIREBASE_BUCKET }}
           BOT_ID: bot3
         run: |
-          python firebase_video_automation.py
+          python main.py
