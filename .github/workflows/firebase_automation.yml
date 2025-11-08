@@ -2,32 +2,31 @@ name: Firebase Video Automation
 
 on:
   schedule:
-    - cron: "0 */10 * * *"   # every 5 hours
+    - cron: "0 */4 * * *" # every 4 hours
   workflow_dispatch:
 
 jobs:
-  process-videos:
+  process_videos:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.10"
 
       - name: Install dependencies
         run: |
-          sudo apt-get update -y
-          sudo apt-get install -y ffmpeg
-          pip install firebase-admin requests
+          pip install firebase-admin requests ffmpeg-python
 
-      - name: Run automation
+      - name: Run video automation
         env:
-          FIREBASE_MAIN: ${{ secrets.FIREBASE_CREDENTIALS }}
-          FIREBASE_LOGS: ${{ secrets.FIREBASE_KEY }}
-          BOT_ID: bot2
-        run: python main.py
+          FIREBASE_CREDENTIALS_MAIN: ${{ secrets.FIREBASE_CREDENTIALS_MAIN }}
+          FIREBASE_CREDENTIALS_VERIFY: ${{ secrets.FIREBASE_CREDENTIALS_VERIFY }}
+          FIREBASE_BUCKET: ${{ secrets.FIREBASE_BUCKET }}
+          BOT_ID: bot3
+        run: |
+          python firebase_video_automation.py
