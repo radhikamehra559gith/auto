@@ -3,8 +3,8 @@
 # ========================================
 
 import os
+import json
 import shutil
-import importlib.util
 import re
 import uuid
 import requests
@@ -19,13 +19,19 @@ from firebase_admin import credentials, storage, firestore
 # ========================================
 bot_id = "bot2"
 
-firebase_credentials = os.getenv("FIREBASE_KEY")
+firebase_credentials_json = os.getenv("FIREBASE_CREDENTIALS")
 
+if not firebase_credentials_json:
+    print("❌ Missing FIREBASE_CREDENTIALS environment variable!")
+    sys.exit(1)
+
+# Convert JSON string → dict
+firebase_credentials_dict = json.loads(firebase_credentials_json)
 
 bucket_name = "chat-app-13880.appspot.com"
 
 if not firebase_admin._apps:
-    cred = credentials.Certificate(firebase_credentials)
+    cred = credentials.Certificate(firebase_credentials_dict)
     firebase_admin.initialize_app(cred, {"storageBucket": bucket_name})
 
 db = firestore.client()
@@ -46,11 +52,11 @@ def get_video_duration(filename):
     )
     return float(result.stdout)
 
+
 def create_quality_versions(input_file):
     qualities = {"360p": "640x360", "480p": "854x480", "720p": "1280x720"}
     output_files = {}
     os.makedirs("output_videos", exist_ok=True)
-    gpu_available = shutil.which("nvidia-smi") is not None
 
     for quality, resolution in qualities.items():
         output_file = f"output_videos/{uuid.uuid4()}-{quality}.mp4"
@@ -61,7 +67,9 @@ def create_quality_versions(input_file):
         ]
         subprocess.run(cmd, check=True)
         output_files[quality] = output_file
+
     return output_files
+
 
 def upload_to_firebase(file_path, token, quality=None):
     filename = os.path.basename(file_path)
@@ -76,6 +84,7 @@ def upload_to_firebase(file_path, token, quality=None):
     blob.upload_from_filename(file_path)
     blob.make_public()
     return blob.public_url.replace("/", "%2F").replace("%2F%3F", "/?")
+
 
 # ========================================
 # Logging / Verification
@@ -93,12 +102,14 @@ if not bot_snapshot.exists:
 else:
     bot_data = bot_snapshot.to_dict() or {}
 
+
 def parse_runtime(rt):
     try:
         h, m, s = map(int, rt.replace("H", "").replace("M", "").replace("S", "").split("-"))
         return h + m/60 + s/3600
     except:
         return 0
+
 
 total_runtime = sum(parse_runtime(v.get("active_time", "0H-0M-0S"))
                     for k, v in bot_data.items() if k.startswith("runtime_"))
@@ -159,6 +170,8 @@ for index, doc in enumerate(unprocessed_docs, start=1):
                 f.write(chunk)
 
     duration = get_video_duration(video_filename)
+
+    # Generate thumbnail
     thumbnail_file = "thumbnail.jpg"
     subprocess.run([
         "ffmpeg", "-y", "-i", video_filename, "-ss", str(duration/2),
@@ -167,6 +180,7 @@ for index, doc in enumerate(unprocessed_docs, start=1):
 
     converted_files = create_quality_versions(video_filename)
 
+    # Upload
     video_urls = {}
     for quality, path in converted_files.items():
         url = upload_to_firebase(path, token, quality)
@@ -174,6 +188,7 @@ for index, doc in enumerate(unprocessed_docs, start=1):
 
     thumbnail_url = upload_to_firebase(thumbnail_file, token)
 
+    # Update Firestore
     db.collection(collection_name).document(doc.id).update({
         "qualities": video_urls,
         "thumbnail": thumbnail_url,
