@@ -2,12 +2,14 @@ name: Firebase Video Automation
 
 on:
   schedule:
-    - cron: "0 */5 * * *"   # ⏰ Every 5 hours
-  workflow_dispatch:        # Manual run button
+    - cron: "0 */5 * * *"   # Every 5 hours
+  workflow_dispatch:
+
 jobs:
   process-videos:
     runs-on: ubuntu-latest
     timeout-minutes: 300
+
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -15,7 +17,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.11"
 
       - name: Install dependencies
         run: |
@@ -25,7 +27,5 @@ jobs:
 
       - name: Run automation
         env:
-          FIREBASE_KEY: ${{ secrets.FIREBASE_KEY }}
-        run: |
-          echo "$FIREBASE_KEY" > firebase_key.json
-          python main.py
+          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS }}
+        run: python main.py
