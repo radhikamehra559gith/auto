@@ -27,7 +27,7 @@ jobs:
 
       - name: Run automation
         env:
-          FIREBASE_MAIN: ${{ secrets.FIREBASE_CREDENTIALS_MAIN }}
-          FIREBASE_LOGS: ${{ secrets.FIREBASE_CREDENTIALS_VERIFY }}
+          FIREBASE_CREDENTIALS_MAIN: ${{ secrets.FIREBASE_CREDENTIALS_MAIN }}
+          FIREBASE_CREDENTIALS_VERIFY: ${{ secrets.FIREBASE_CREDENTIALS_VERIFY }}
           BOT_ID: bot3
         run: python main.py
