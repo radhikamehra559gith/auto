@@ -2,7 +2,7 @@ import os
 import requests
 import logging
 from supabase import create_client, Client
-
+ 
 # -----------------------
 # Setup logging
 # -----------------------
