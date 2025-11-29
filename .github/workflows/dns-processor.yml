@@ -2,6 +2,10 @@ name: Process DNS Records
 
 on:
   workflow_dispatch:     # manual run
+    inputs:
+      message:
+        required: false
+        type: string
 
 jobs:
   run-script:
